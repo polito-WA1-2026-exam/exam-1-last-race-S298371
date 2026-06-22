@@ -259,12 +259,7 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
 
     // B. Validazione dei tipi di dato degli elementi interni per evitare eccezioni a runtime (Qualità del codice)
     for (const seg of percorsoScelto) {
-        if (!seg || typeof seg !== 'object' || 
-            typeof seg.id !== 'number' || 
-            typeof seg.station_a_id !== 'number' || 
-            typeof seg.station_b_id !== 'number' || 
-            typeof seg.line_id !== 'number') {
-            
+        if (!seg || typeof seg !== 'object' || typeof seg.id !== 'number') {
             return res.status(422).json({ error: "Formato dei segmenti non valido o tipi di dato errati." });
         }
     }
@@ -285,13 +280,22 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
         const connessioniMappa = network.connections;
         const stazioniMappa = network.stations;
 
+        const percorsoReale = [];
+        for (const segClient of percorsoScelto) {
+            const segmentoDalDB = connessioniMappa.find(c => c.id === segClient.id);
+            if (!segmentoDalDB) {
+                return await fallisciPartita(`Il segmento con ID ${segClient.id} non esiste nella rete ufficiale.`);
+            }
+            percorsoReale.push(segmentoDalDB);
+        }
+
         // --- CONTROLLO 1: Corrispondenza dei nodi di Partenza e Arrivo ---
-        const primoSegmento = percorsoScelto[0];
+        const primoSegmento = percorsoReale[0];
         if (primoSegmento.station_a_id !== partenza.id && primoSegmento.station_b_id !== partenza.id) {
             return await fallisciPartita("Il percorso non inizia dalla stazione di partenza assegnata.");
         }
 
-        const ultimoSegmento = percorsoScelto[percorsoScelto.length - 1];
+        const ultimoSegmento = percorsoReale[percorsoReale.length - 1];
         if (ultimoSegmento.station_a_id !== destinazione.id && ultimoSegmento.station_b_id !== destinazione.id) {
             return await fallisciPartita("Il percorso non termina nella stazione di destinazione assegnata.");
         }
@@ -300,47 +304,45 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
         const segmentiVisti = new Set();
         let stazioneCorrenteId = partenza.id;
 
-        for (let i = 0; i < percorsoScelto.length; i++) {
-            const seg = percorsoScelto[i];
-
-            // Verifichiamo l'esistenza reale del segmento nell'infrastruttura del server
-            const segmentoReale = connessioniMappa.find(c => c.id === seg.id);
-            if (!segmentoReale) {
-                return await fallisciPartita(`Il segmento con ID ${seg.id} non esiste nella rete ufficiale.`);
-            }
+        for (let i = 0; i < percorsoReale.length; i++) {
+            const segReale = percorsoReale[i];
 
             // Vincolo: ciascun segmento può essere selezionato una sola volta (No duplicati)
-            if (segmentiVisti.has(seg.id)) {
+            if (segmentiVisti.has(segReale.id)) {
                 return await fallisciPartita("Il percorso contiene segmenti duplicati.");
             }
-            segmentiVisti.add(seg.id);
+            segmentiVisti.add(segReale.id);
 
             // Verifica della proprietà di adiacenza dei nodi (Continuità della linea)
-            if (seg.station_a_id === stazioneCorrenteId) {
-                stazioneCorrenteId = seg.station_b_id; 
-            } else if (seg.station_b_id === stazioneCorrenteId) {
-                stazioneCorrenteId = seg.station_a_id; 
+            if (segReale.station_a_id === stazioneCorrenteId) {
+                stazioneCorrenteId = segReale.station_b_id; 
+            } else if (segReale.station_b_id === stazioneCorrenteId) {
+                stazioneCorrenteId = segReale.station_a_id; 
             } else {
                 return await fallisciPartita("Il percorso è interrotto (manca continuità tra segmenti consecutivi).");
             }
 
             // --- CONTROLLO 3: Restrizioni sui cambi di linea (Solo nelle stazioni di interscambio) ---
             if (i > 0) {
-                const segPrecedente = percorsoScelto[i - 1];
                 
-                if (seg.line_id !== segPrecedente.line_id) {
-                    // Identifichiamo il punto d'intersezione comune tra i due segmenti
-                    const stazioneContattoId = (segPrecedente.station_a_id === seg.station_a_id || segPrecedente.station_a_id === seg.station_b_id) 
-                        ? segPrecedente.station_a_id 
-                        : segPrecedente.station_b_id;
+                const segPrecedente = percorsoReale[i - 1];
+                
+                if (segReale.line_id !== segPrecedente.line_id) {
                     
-                    // Calcoliamo quante linee distinte transitano realmente da questa stazione nel DB
+                    // PRIMA ERA COSÌ: const stazioneContattoId = (segPrecedente.station_a_id === seg.station_a_id ...
+                    // ORA È COSÌ (Usa i nodi sicuri per trovare l'intersezione):
+                    let stazioneContattoId;
+                    if (segPrecedente.station_a_id === segReale.station_a_id || segPrecedente.station_a_id === segReale.station_b_id) {
+                        stazioneContattoId = segPrecedente.station_a_id;
+                    } else {
+                        stazioneContattoId = segPrecedente.station_b_id;
+                    }
+                    
                     const connessioniDiQuestaStazione = connessioniMappa.filter(c => 
                         c.station_a_id === stazioneContattoId || c.station_b_id === stazioneContattoId
                     );
                     const lineeUniche = new Set(connessioniDiQuestaStazione.map(c => c.line_id));
 
-                    // Se transitano meno di 2 linee, la stazione non implementa la proprietà di interscambio
                     if (lineeUniche.size < 2) {
                         const stazioneContatto = stazioniMappa.find(s => s.id === stazioneContattoId);
                         return await fallisciPartita(`Cambio di linea illegale: la stazione ${stazioneContatto ? stazioneContatto.name : 'Sconosciuta'} non è un nodo di interscambio.`);
@@ -355,7 +357,7 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
         const tuttiGliEventi = await gameDao.getEvents();
 
         // Generazione stocastica degli imprevisti/bonus per ogni tratta percorsa
-        for (let i = 0; i < percorsoScelto.length; i++) {
+        for (let i = 0; i < percorsoReale.length; i++) {
             const eventoCasuale = tuttiGliEventi[Math.floor(Math.random() * tuttiGliEventi.length)];
             monete += eventoCasuale.effect;
             

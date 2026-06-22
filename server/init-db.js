@@ -67,6 +67,8 @@ function seedData() {
             [4, 5, 2], [5, 6, 2], [6, 7, 2], // Linea 2
             [7, 8, 3], [8, 9, 3],            // Linea 3
             [9, 10, 4], [10, 11, 4], [11, 12, 4] // Linea 4
+            [12, 1, 1], 
+            [3,8,3]
         ];
         const stmtConn = db.prepare("INSERT INTO connections (station_a_id, station_b_id, line_id) VALUES (?, ?, ?)");
         connections.forEach(c => stmtConn.run(c[0], c[1], c[2]));

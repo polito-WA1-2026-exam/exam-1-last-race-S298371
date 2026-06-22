@@ -41,23 +41,41 @@ export default function Game() {
     // Timer per la Fase 2
     useEffect(() => {
         let timer = null;
-        if (gameState === 'PLANNING' && timeLeft > 0) {
-            timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-        } else if (gameState === 'PLANNING' && timeLeft === 0) {
+        if (gameState === 'PLANNING') {
+            timer = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer); // Si ferma da solo quando arriva a 0
+                        return 0; 
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => { if (timer) clearInterval(timer); };
+    }, [gameState]); // <-- Dipende SOLO da gameState. Niente più riavvii continui!
+
+    // ✅ CAMBIAMENTO 1B: Un "ascoltatore" separato che interviene solo a tempo scaduto
+    useEffect(() => {
+        if (gameState === 'PLANNING' && timeLeft === 0) {
             handleSubmitRoute();
         }
-        return () => clearInterval(timer);
-    }, [gameState, timeLeft]);
-
+    }, [timeLeft, gameState]);
     // Animazione del viaggio (Fase 3)
     useEffect(() => {
         if (gameState === 'EXECUTION') {
             if (executionStep < events.length) {
                 const timer = setTimeout(() => {
-                    setExecutionStep(prev => prev + 1);
-                    if (executionStep >= 0 && events[executionStep]) {
-                        setCurrentCoins(prev => prev + events[executionStep].modifier);
-                    }
+                   // ✅ CAMBIAMENTO 2: Aggiorniamo le monete DENTRO la funzione di aggiornamento del passo
+                    setExecutionStep(prev => {
+                        const nextStep = prev + 1; // Calcoliamo subito il passo futuro
+                        
+                        // E aggiorniamo le monete usando il passo futuro! Sincronizzazione perfetta.
+                        if (nextStep < events.length && events[nextStep]) {
+                            setCurrentCoins(curr => curr + events[nextStep].modifier);
+                        }
+                        return nextStep;
+                    }); 
                 }, 2500); 
                 return () => clearTimeout(timer);
             } else {
@@ -97,30 +115,54 @@ export default function Game() {
         setChosenRoute(chosenRoute.slice(0, -1));
     };
 
-    const handleSubmitRoute = async () => {
+   const handleSubmitRoute = async () => {
         try {
+            // 1. CREAZIONE PAYLOAD SICURO E LEGGERO
+            // Estraiamo solo l'ID da ogni segmento per allinearci al backend
+            const payloadSicuro = chosenRoute.map(seg => ({ id: seg.id }));
+
+            // 2. CHIAMATA AL SERVER
             const response = await fetch('http://localhost:3001/api/games/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ percorso: chosenRoute })
+                body: JSON.stringify({ percorso: payloadSicuro }) // Inviamo solo gli ID!
             });
             
+            // 3. GESTIONE DELLA RISPOSTA
             if (response.ok) {
                 const data = await response.json();
+                
+                // Salviamo i dati ricevuti
                 setValidationResult(data.esito);
                 setScore(data.punteggio);
                 setEvents(data.eventi);
-                if (data.esito === 'invalido'){
+                
+                if (data.esito === 'invalido') {
+                    // Il server ha bocciato il percorso (tempo scaduto, stazioni errate, ecc.)
                     setGameState('RESULT');
-                } else{
-                    setExecutionStep(-1);
-                    setCurrentCoins(20);
+                } else {
+                    // Il percorso è valido: avviamo l'animazione!
+                    setExecutionStep(0); // Partiamo subito dallo step 0
+                    // Aggiorniamo le monete istantaneamente applicando il primissimo bonus/malus
+                    setCurrentCoins(20 + (data.eventi[0]?.modifier || 0)); 
                     setGameState('EXECUTION');
                 }
+            } else {
+                // 🛡️ ANTI-BLOCCO 1: ERRORI SERVER (400, 401, 422, 500)
+                // Se la richiesta è malformata o il server va in errore, forziamo la squalifica
+                setValidationResult('invalido');
+                setScore(0);
+                setEvents([]);
+                setGameState('RESULT');
             }
         } catch (err) {
-            console.error("Errore validazione", err);
+            // 🛡️ ANTI-BLOCCO 2: CADUTA DI RETE O SERVER SPENTO
+            console.error("Errore critico durante la validazione del percorso:", err);
+            setValidationResult('invalido');
+            setScore(0);
+            setEvents([]);
+            setGameState('RESULT');
         }
     };
 
