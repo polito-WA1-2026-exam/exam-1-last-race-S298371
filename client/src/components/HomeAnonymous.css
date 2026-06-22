@@ -1,0 +1,120 @@
+/* src/components/HomeAnonymous.css */
+
+/* Definizione delle variabili d'ambiente con il tema Mario Kart */
+:root {
+    --mk-primary-red: #e52521;     /* Il rosso classico della divisa di Mario */
+    --mk-accent-blue: #0058b8;     /* Il blu acceso dei dettagli / logo */
+    --mk-coin-gold: #fbd000;       /* Il giallo brillante delle monete di gioco */
+    --mk-bg-light: #fdfefe;         /* Sfondo chiaro pulito */
+    --mk-card-bg: #f4f6f7;          /* Grigio chiarissimo per i box */
+    --mk-text-dark: #212529;       /* Colore del testo principale */
+    --mk-border: #dcdcdc;          /* Colore dei bordi sottili */
+}
+
+.home-anon-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--mk-text-dark);
+}
+
+/* Header centrato come nella struttura dei layout del corso */
+.header-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.main-title {
+    font-size: 2.8rem;
+    color: var(--mk-primary-red); /* Rosso Mario Kart */
+    text-transform: uppercase;     /* Rende il titolo più "arcade" */
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: #555555;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* La scheda delle istruzioni con la barra laterale rossa di Mario */
+.instructions-card {
+    background-color: var(--mk-card-bg);
+    border-left: 6px solid var(--mk-primary-red); /* Bordo sinistro rosso */
+    border-radius: 6px;
+    padding: 28px;
+    margin-bottom: 30px;
+    border-top: 1px solid var(--mk-border);
+    border-right: 1px solid var(--mk-border);
+    border-bottom: 1px solid var(--mk-border);
+}
+
+.instructions-card h2 {
+    color: var(--mk-accent-blue); /* Titolo interno blu */
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.6rem;
+}
+
+/* Lista delle regole strutturata sul modello lineare del Lab 4 */
+.instructions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.instructions-list li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--mk-border);
+    line-height: 1.6;
+}
+
+.instructions-list li:last-child {
+    border-bottom: none;
+}
+
+/* Box di avviso/CTA color Giallo Moneta */
+.cta-section {
+    background-color: #fffbeb; /* Sfumatura chiarissima del giallo */
+    border: 2px solid var(--mk-coin-gold); /* Bordo Giallo Moneta */
+    border-radius: 6px;
+    padding: 24px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.cta-text {
+    margin-top: 0;
+    margin-bottom: 18px;
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+/* Pulsante di Login con il Blu d'accento e transizione fluida su Hover */
+.login-btn {
+    background-color: var(--mk-accent-blue);
+    color: #ffffff;
+    border: none;
+    padding: 14px 36px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #003b7a; /* Effetto rilievo stile bottone Nintendo */
+    transition: all 0.1s ease-in-out;
+}
+
+.login-btn:hover {
+    background-color: #004693;
+    transform: translateY(1px);
+    box-shadow: 0 3px 0 #003b7a;
+}
+
+.login-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #003b7a;
+}

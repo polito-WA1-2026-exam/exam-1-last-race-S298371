@@ -1,0 +1,103 @@
+/* src/components/Home.css */
+
+.home-logged-container {
+    max-width: 850px;
+    margin: 40px auto;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--mk-text-dark, #212529);
+}
+
+.logged-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.welcome-title {
+    font-size: 2.4rem;
+    color: var(--mk-text-dark, #212529);
+    margin: 0 0 10px 0;
+}
+
+.logged-subtitle {
+    font-size: 1.1rem;
+    color: #666666;
+    margin: 0;
+}
+
+/* La scheda delle regole con bordo Rosso Mario */
+.rules-card {
+    background-color: var(--mk-card-bg, #f4f6f7);
+    border: 3px solid var(--mk-primary-red, #e52521); 
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    margin-bottom: 35px;
+}
+
+.rules-card h2 {
+    color: var(--mk-accent-blue, #0058b8); 
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rules-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rules-list li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--mk-border, #dcdcdc);
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.rules-list li:last-child {
+    border-bottom: none;
+}
+
+.action-area {
+    text-align: center;
+    background-color: #fffbeb; 
+    border: 2px dashed var(--mk-coin-gold, #fbd000);
+    border-radius: 8px;
+    padding: 25px;
+}
+
+.action-area p {
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* Pulsante Blu di navigazione verso la mappa di Setup */
+.play-game-btn {
+    background-color: var(--mk-accent-blue, #0058b8); /* Blu classica scuderia */
+    color: #ffffff;
+    border: none;
+    padding: 16px 50px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #003b7a; 
+    transition: all 0.1s ease-in-out;
+}
+
+.play-game-btn:hover {
+    background-color: #004693;
+    transform: translateY(1px);
+    box-shadow: 0 5px 0 #003b7a;
+}
+
+.play-game-btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #003b7a;
+}

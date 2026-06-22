@@ -1,0 +1,138 @@
+/* src/components/Ranking.css */
+
+.ranking-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.ranking-title {
+    text-align: center;
+    color: var(--mk-accent-blue, #0058b8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 2.2rem;
+    margin-bottom: 30px;
+}
+
+/* Loader in puro CSS personalizzato */
+.loading-box {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.mk-spinner {
+    width: 40px;
+    height: 40px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--mk-primary-red, #e52521);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Alert di errore */
+.mk-alert-danger {
+    background-color: #f8d7da;
+    border: 2px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Struttura della Tabella */
+.ranking-card {
+    background-color: #ffffff;
+    border: 3px solid var(--mk-border, #dcdcdc);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.mk-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.mk-table th {
+    background-color: #212529;
+    color: #ffffff;
+    padding: 18px 20px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mk-table th.col-position {
+    width: 20%;
+}
+
+.mk-table th.col-score {
+    width: 30%;
+}
+
+.mk-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mk-border, #dcdcdc);
+    font-size: 1.1rem;
+}
+
+.mk-table tr:last-child td {
+    border-bottom: none;
+}
+
+.mk-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Evidenziazione del Podio (Stile Mario Kart) */
+.gold-row {
+    background-color: #fffbeb !important;
+    border-left: 6px solid var(--mk-coin-gold, #fbd000);
+}
+
+.silver-row {
+    background-color: #f8f9fa !important;
+    border-left: 6px solid #c0c0c0;
+}
+
+.bronze-row {
+    background-color: #fdfaf6 !important;
+    border-left: 6px solid #cd7f32;
+}
+
+/* Stili per le celle */
+.pos-cell {
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+.pilot-cell {
+    font-size: 1.15rem;
+    color: var(--mk-text-dark, #212529);
+}
+
+.score-cell {
+    color: #b58900;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.empty-row {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    padding: 30px !important;
+}

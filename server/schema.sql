@@ -1,0 +1,52 @@
+PRAGMA foreign_keys = ON;
+
+-- Rimuoviamo le tabelle vecchie in ordine inverso di chiave esterna per non violare i vincoli
+DROP TABLE IF EXISTS games;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS connections;
+DROP TABLE IF EXISTS lines;
+DROP TABLE IF EXISTS stations;
+DROP TABLE IF EXISTS users;
+
+-- Ora possiamo usare tranquillamente IF NOT EXISTS con la certezza di avere uno schema aggiornato!
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS stations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS lines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    color TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    station_a_id INTEGER NOT NULL,
+    station_b_id INTEGER NOT NULL,
+    line_id INTEGER NOT NULL,
+    FOREIGN KEY (station_a_id) REFERENCES stations(id),
+    FOREIGN KEY (station_b_id) REFERENCES stations(id),
+    FOREIGN KEY (line_id) REFERENCES lines(id)
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL,
+    effect INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    score INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
