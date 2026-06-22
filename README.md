@@ -187,8 +187,8 @@ the stations and lines tables
 
 ## Screenshot
 
-![gamepage](./img/gamepage.jpg)
-![rankingpage](./img/rankingpage.jpg)
+![gamepage](.img\gamepage.png)
+![rankingpage](.img\rankingpage.png)
 
 
 ## Users Credentials
