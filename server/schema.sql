@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- Rimuoviamo le tabelle vecchie in ordine inverso di chiave esterna per non violare i vincoli
+-- Inverse order for external reference
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS connections;
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS lines;
 DROP TABLE IF EXISTS stations;
 DROP TABLE IF EXISTS users;
 
--- Ora possiamo usare tranquillamente IF NOT EXISTS con la certezza di avere uno schema aggiornato!
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,

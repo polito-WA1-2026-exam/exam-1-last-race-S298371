@@ -2,10 +2,7 @@
 
 const db = require('./db');
 
-/**
- * 1. Restituisce la mappa completa (stazioni, linee e connessioni insieme)
- * Richiesto da: GET /api/network
- */
+//return complete network
 exports.getCompleteNetwork = () => {
     return new Promise((resolve, reject) => {
         const sqlStations = 'SELECT * FROM stations';
@@ -21,7 +18,7 @@ exports.getCompleteNetwork = () => {
                 db.all(sqlConnections, [], (err, connections) => {
                     if (err) return reject(err);
                     
-                    // Impacchettiamo tutto in un unico oggetto di rete
+                    
                     resolve({
                         stations: stations,
                         lines: lines,
@@ -33,10 +30,7 @@ exports.getCompleteNetwork = () => {
     });
 };
 
-/**
- * 2. Estrae la classifica dei punteggi migliori (un record per ogni utente che ha giocato)
- * Richiesto da: GET /api/ranking
- */
+//obtain best result (ranking)
 exports.getRanking = () => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -53,14 +47,10 @@ exports.getRanking = () => {
     });
 };
 
-/**
- * 3. Recupera tutti gli eventi casuali (imprevisti e bonus)
- * Richiesto da: POST /api/games/validate (per estrarre gli eventi durante il percorso)
- */
+//obtain events
 exports.getEvents = () => {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM events';
-        // Usiamo db.all perché vogliamo estrarre un array con TUTTE le righe degli eventi
         db.all(sql, [], (err, rows) => {
             if (err) reject(err);
             else resolve(rows);
@@ -68,20 +58,14 @@ exports.getEvents = () => {
     });
 };
 
-/**
- * 4. Salva una nuova partita (vinta o fallita) nel database
- * Richiesto da: POST /api/games/validate
- */
+//save game
 exports.createGame = (userId, score, date) => {
     return new Promise((resolve, reject) => {
         const sql = 'INSERT INTO games (user_id, score, date) VALUES (?, ?, ?)';
-        // Usiamo db.run perché stiamo INSERENDO dati, non leggendo. 
-        // I punti interrogativi (?) evitano le SQL Injection.
         db.run(sql, [userId, score, date], function(err) {
             if (err) {
                 reject(err);
             } else {
-                // "this.lastID" contiene l'ID della nuova riga appena creata nel database
                 resolve(this.lastID);
             }
         });

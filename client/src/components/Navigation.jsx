@@ -10,25 +10,25 @@ export default function Navigation() {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/'); // Dopo il logout, torna alla home / istruzioni
+        navigate('/'); 
     };
 
     return (
         <nav className="mk-navbar">
             <div className="mk-navbar-container">
-                {/* Logo che riporta sempre alla Home/Istruzioni */}
+                
                 <NavLink to="/" end className="mk-navbar-brand">
-                    🏎️ Last Race
+                     Last Race
                 </NavLink>
                 
                 <div className="mk-navbar-links">
-                    <NavLink to="/" end className="mk-nav-link">Istruzioni</NavLink>
+                    <NavLink to="/" end className="mk-nav-link">Instructions</NavLink>
                     
-                    {/* Link esclusivi per piloti loggati */}
+                    {/* only for log user */}
                     {user && (
                         <>
-                            <NavLink to="/game" className="mk-nav-link">Gioca</NavLink>
-                            <NavLink to="/ranking" className="mk-nav-link">Classifica</NavLink>
+                            <NavLink to="/game" className="mk-nav-link">Play</NavLink>
+                            <NavLink to="/ranking" className="mk-nav-link">Ranking</NavLink>
                         </>
                     )}
                 </div>
@@ -36,7 +36,7 @@ export default function Navigation() {
                 <div className="mk-navbar-actions">
                     {user ? (
                         <>
-                            <span className="mk-greeting">Ciao, {user.username}!</span>
+                            <span className="mk-greeting">Welcome, {user.username}!</span>
                             <button className="mk-btn-danger" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (

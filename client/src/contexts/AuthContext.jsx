@@ -1,24 +1,20 @@
 import React, { createContext, useState, useEffect } from 'react';
 
-// Creiamo il contesto
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    // user = null (non loggato), user = {id, username} (loggato)
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
     
-    // Quando l'app si avvia (o si aggiorna la pagina), verifica se c'è già una sessione
+    const [user, setUser] = useState(null); //non log
+    const [loading, setLoading] = useState(true); //log
+
     useEffect(() => {
-        checkSession();
-        
+        checkSession();   
     }, []);
 
     const checkSession = async () => {
         try {
             const response = await fetch('http://localhost:3001/api/sessions/current', {
-                credentials: 'include' // Vite gestirà le credenziali per il momento
+                credentials: 'include' 
             });
             if (response.ok) {
                 const data = await response.json();
@@ -29,11 +25,11 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             setUser(null);
         } finally {
-            setLoading(false); // Il caricamento iniziale è finito
+            setLoading(false); 
         }
     };
 
-    // Funzione chiamata dal form di Login
+    // call from login form
     const login = async (username, password) => {
         try {
             const response = await fetch('http://localhost:3001/api/sessions', {
@@ -48,23 +44,23 @@ export const AuthProvider = ({ children }) => {
                 return { success: true };
             } else {
                 const errData = await response.json();
-                return { success: false, message: errData.message || 'Login fallito' };
+                return { success: false, message: errData.message || 'Login failed' };
             }
         } catch (err) {
-            return { success: false, message: 'Errore di connessione' };
+            return { success: false, message: 'connection error' };
         }
     };
 
-    // Funzione chiamata dalla Navbar
+    //function from navbar
     const logout = async () => {
         try {
             await fetch('http://localhost:3001/api/sessions/current', {
                 method: 'DELETE',
                 credentials :'include'
             });
-            setUser(null); // Svuota lo stato utente
+            setUser(null); 
         } catch (err) {
-            console.error("Errore durante il logout", err);
+            console.error("Error during logout:", err);
         }
     };
 

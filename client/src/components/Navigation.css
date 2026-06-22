@@ -1,7 +1,5 @@
-/* src/components/Navigation.css */
-
 .mk-navbar {
-    background-color: #212529; /* Sfondo scuro per far risaltare i colori arcade */
+    background-color: #212529; 
     border-bottom: 4px solid var(--mk-primary-red, #e52521);
     padding: 12px 20px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -56,7 +54,7 @@
     font-size: 1.1rem;
 }
 
-/* Bottone rosso per il Logout */
+
 .mk-btn-danger {
     background-color: var(--mk-primary-red, #e52521);
     color: white;
@@ -76,7 +74,7 @@
     box-shadow: 0 2px 0 #a11a17;
 }
 
-/* Bottone blu di Login (usato come Link) */
+
 .mk-btn-primary-link {
     background-color: var(--mk-accent-blue, #0058b8);
     color: white;
@@ -96,19 +94,19 @@
     box-shadow: 0 2px 0 #003b7a;
 }
 
-/* Disabilita il click su tutti i NavLink attivi (inclusa la scritta brand) */
+
 .mk-navbar-brand.active,
 .mk-nav-link.active {
     pointer-events: none;
     cursor: default;
 }
 
-/* Cambia leggermente il colore ai link del menu quando sei su quella pagina */
+
 .mk-nav-link.active {
-    color: #888888; /* Un grigio che indica "sei già qui" */
+    color: #888888; 
 }
 
-/* (Opzionale) Evita che l'hover cambi il colore se il link è già attivo */
+
 .mk-nav-link.active:hover {
     color: #888888;
 }

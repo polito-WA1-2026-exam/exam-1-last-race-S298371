@@ -2,18 +2,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useContext } from 'react';
 import { AuthContext } from './contexts/AuthContext';
 
-// Importiamo le nostre pagine "segnaposto"
+
 import Home from './components/Home';
 import Login from './components/Login';
 import Game from './components/Game';
 import Ranking from './components/Ranking';
 import Navigation from './components/Navigation';
-// 🛡️ COMPONENTE PROTETTORE (Il "Buttafuori")
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
-      return <div>Caricamento in corso...</div>;
+      return <div>Loading...</div>;
   }
 
   if (!user) {

@@ -2,9 +2,9 @@
 
 const fs = require('fs');
 const crypto = require('crypto');
-const db = require('./db'); // Il tuo file db.js
+const db = require('./db'); 
 
-// Funzione per generare hash sicuro con scrypt
+
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.scryptSync(password, salt, 64).toString('hex');
@@ -13,28 +13,26 @@ function hashPassword(password) {
 
 async function initDatabase() {
     try {
-        console.log("Inizializzazione del database...");
-
-        // 1. Leggiamo ed eseguiamo lo schema.sql
+        console.log("Inizializzazione del database");
         const schema = fs.readFileSync('schema.sql', 'utf8');
         db.exec(schema, (err) => {
             if (err) throw err;
-            console.log("-> Schema creato correttamente.");
+            console.log("Schema.");
 
-            // 2. Inseriamo i dati in sequenza
+            
             seedData();
         });
 
     } catch (err) {
-        console.error("Errore fatale:", err.message);
+        console.error("Error:", err.message);
     }
 }
 
 function seedData() {
-    console.log("-> Popolamento del database in corso...");
+
 
     db.serialize(() => {
-        // 1. INSERIMENTO UTENTI
+        //user
         const { hash, salt } = hashPassword('password');
         const stmtUser = db.prepare("INSERT INTO users (id, username, password_hash, salt) VALUES (?, ?, ?, ?)");
         stmtUser.run(1, 'principessa_nina', hash, salt);
@@ -42,57 +40,56 @@ function seedData() {
         stmtUser.run(3, 'Enri Jr', hash, salt);
         stmtUser.finalize();
 
-        // 2. INSERIMENTO STAZIONI
+        // stations
         const stations = [
-            'Casa di Mario', 'Regno dei Funghi', 'Circuito di Luigi', 'Castello di Peach',
-            'Bosco dei Boos', 'Desert Land', 'Yoshi Island', 'Spiaggia di Peach',
-            'Valle di Bowser', 'Pista Arcobaleno', 'Castello di Bowser', 'Miniera di Wario'
+            'Mario House', 'Mushroom Kingdom', 'Luigi Circuit', 'Peach Castle',
+            'Boo Woods', 'Desert Land', 'Yoshi Island', 'Peach Beach',
+            'Bowser Valley', 'Rainbow Road', 'Bowser Castle', 'Wario Mine'
         ];
         const stmtStation = db.prepare("INSERT INTO stations (id, name) VALUES (?, ?)");
         stations.forEach((name, i) => stmtStation.run(i + 1, name));
         stmtStation.finalize();
 
-        // 3. INSERIMENTO LINEE
+        // lines
         const lines = [
-            [1, 'Linea Toad', 'Red'], [2, 'Linea Yoshi', 'Blue'],
-            [3, 'Linea Daisy', 'Green'], [4, 'Linea Wario', 'Yellow']
+           [1, 'Toad Line', 'Red'], [2, 'Yoshi Line', 'Blue'],
+            [3, 'Daisy Line', 'Green'], [4, 'Wario Line', 'Yellow']
         ];
         const stmtLine = db.prepare("INSERT INTO lines (id, name, color) VALUES (?, ?, ?)");
         lines.forEach(l => stmtLine.run(l[0], l[1], l[2]));
         stmtLine.finalize();
 
-        // 4. INSERIMENTO CONNESSIONI (Ora le stazioni e linee esistono!)
+        // connections
         const connections = [
-            [1, 2, 1], [2, 3, 1], [3, 4, 1], // Linea 1
-            [4, 5, 2], [5, 6, 2], [6, 7, 2], // Linea 2
-            [7, 8, 3], [8, 9, 3],            // Linea 3
-            [9, 10, 4], [10, 11, 4], [11, 12, 4] // Linea 4
-            [12, 1, 1], 
-            [3,8,3]
+            [1, 2, 1], [2, 3, 1], [3, 4, 1], 
+            [4, 5, 2], [5, 6, 2], [6, 7, 2], 
+            [7, 8, 3], [8, 9, 3],            
+            [9, 10, 4], [10, 11, 4], [11, 12, 4] ,
+            [4, 7, 2], [7,9,3]
         ];
         const stmtConn = db.prepare("INSERT INTO connections (station_a_id, station_b_id, line_id) VALUES (?, ?, ?)");
         connections.forEach(c => stmtConn.run(c[0], c[1], c[2]));
         stmtConn.finalize();
 
-        // 5. INSERIMENTO EVENTI
+        // events
         const events = [
-            ['Viaggio tranquillo sul rettilineo', 0], ['Fungo Scatto! Corri più veloce', 1],
-            ['Superata una trappola di banane con stile', 2], ['Hai preso il Cubo Oggetto... Cubo di Monete!', 4],
-            ['Colpito da un Guscio Blu!', -4], ['Sbandata fuori pista sul fango', -2],
-            ['Vista offuscata dalla pece del polpo', -3], ['Un passeggero gentile ti regala una moneta', 1]
+            ['A peaceful ride', 0], ['Mushroom Boost! Speed up', 1],
+            ['Dodged a banana peel in style', 2], ['Coin Cube!', 4],
+            ['Hit by a Blue Shell!', -4], ['Slipped off track in the mud', -2],
+            ['Vision blurred by Blooper ink', -3], ['Gift from a friend', 1]
         ];
         const stmtEvent = db.prepare("INSERT INTO events (description, effect) VALUES (?, ?)");
         events.forEach(e => stmtEvent.run(e[0], e[1]));
         stmtEvent.finalize();
 
-        // 6. INSERIMENTO PARTITE
+        // games
         const stmtGame = db.prepare("INSERT INTO games (user_id, score, date) VALUES (?, ?, ?)");
-        stmtGame.run(1, 24, '2026-06-12');
-        stmtGame.run(1, 15, '2026-06-13');
+        stmtGame.run(1, 10, '2026-06-12');
+        stmtGame.run(1, 1, '2026-06-13');
         stmtGame.run(2, 32, '2026-06-12');
         stmtGame.finalize();
 
-        console.log("-> Database popolato con successo!");
+        console.log("Database populated successfully");
     });
 }
 

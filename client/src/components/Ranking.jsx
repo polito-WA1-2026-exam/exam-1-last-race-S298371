@@ -1,4 +1,3 @@
-// src/components/Ranking.jsx
 import React, { useState, useEffect } from 'react';
 import './Ranking.css';
 
@@ -18,10 +17,10 @@ export default function Ranking() {
                     const data = await response.json();
                     setRanking(data);
                 } else {
-                    setErrorMsg('Impossibile caricare la classifica. Verificare l\'autenticazione.');
+                    setErrorMsg('Unable to load the ranking. Please check your authentication.');
                 }
             } catch (err) {
-                setErrorMsg('Errore di connessione con il server.');
+                setErrorMsg('Connection error with the server.');
             } finally {
                 setLoading(false);
             }
@@ -32,49 +31,49 @@ export default function Ranking() {
 
     return (
         <div className="ranking-container">
-            <h2 className="ranking-title">🏆 Classifica Generale (Top Scores)</h2>
+            <h2 className="ranking-title"> Ranking</h2>
             
             {loading && (
                 <div className="loading-box">
                     <div className="mk-spinner"></div>
-                    <p>Caricamento dei campioni in corso...</p>
+                    <p>Loading ranking</p>
                 </div>
             )}
 
-            {errorMsg && <div className="mk-alert-danger">⚠️ {errorMsg}</div>}
+            {errorMsg && <div className="mk-alert-danger"> {errorMsg}</div>}
 
             {!loading && !errorMsg && (
                 <div className="ranking-card">
                     <table className="mk-table">
                         <thead>
                             <tr>
-                                <th className="col-position">Posizione</th>
-                                <th>Pilota / Utente</th>
-                                <th className="col-score">Miglior Punteggio</th>
+                                <th className="col-position">Position</th>
+                                <th>User</th>
+                                <th className="col-score">Best Score</th>
                             </tr>
                         </thead>
                         <tbody>
                             {ranking.map((row, index) => {
-                                // Assegnazione dinamica di stili e medaglie per il podio
+                                
                                 let positionClass = '';
                                 let medal = `${index + 1}°`;
                                 
-                                if (index === 0) { positionClass = 'gold-row'; medal = '🥇 1°'; }
-                                else if (index === 1) { positionClass = 'silver-row'; medal = '🥈 2°'; }
-                                else if (index === 2) { positionClass = 'bronze-row'; medal = '🥉 3°'; }
+                                if (index === 0) { positionClass = 'gold-row'; medal = ' 1st'; }
+                                else if (index === 1) { positionClass = 'silver-row'; medal = ' 2nd'; }
+                                else if (index === 2) { positionClass = 'bronze-row'; medal = ' 3rd'; }
 
                                 return (
                                     <tr key={row.username} className={positionClass}>
                                         <td className="pos-cell">{medal}</td>
                                         <td className="pilot-cell"><strong>{row.username}</strong></td>
-                                        <td className="score-cell">💰 {row.top_score} monete</td>
+                                        <td className="score-cell"> {row.top_score} scores</td>
                                     </tr>
                                 );
                             })}
                             {ranking.length === 0 && (
                                 <tr>
                                     <td colSpan="3" className="empty-row">
-                                        Nessuna partita registrata nel database. Entra in pista e diventa il primo!
+                                        No games recorded in the database.
                                     </td>
                                 </tr>
                             )}

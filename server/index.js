@@ -1,66 +1,58 @@
 'use strict';
 
 const express = require('express');
-const morgan = require('morgan'); // logger per vedere le richieste nel terminale
+const morgan = require('morgan'); 
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const { body, validationResult } = require('express-validator');
-// Importiamo il DAO degli utenti
+
 const userDao = require('./user-dao');
-
-//importo dao gioco: 
 const gameDao = require('./game-dao');
-
-//importo auth e middleware 
 const { isLoggedIn } = require('./auth');
-
-
-// Inizializzazione dell'applicazione Express
 const app = express();
-const port = 3001; // Il server gira sulla porta 3001 (la 3000 sarà per React)
+const port = 3001; 
 
-// 1. MIDDLEWARE DI BASE
+
 app.use(morgan('dev'));
-app.use(express.json()); // Permette di leggere il body JSON delle richieste POST
+app.use(express.json()); 
 
-// Configurazione CORS per permettere a React (porta 3000) di comunicare con Express (porta 3001)
+// cors config
 const corsOptions = {
     origin: 'http://localhost:5173',
     credentials: true,
 };
 app.use(cors(corsOptions));
 
-// 2. CONFIGURAZIONE DELLE SESSIONI
+// session config
 app.use(session({
     secret: '7x$9P@mK2!wQzA5*bE&rT9_cX4#vB1%nM8(kL3)jH0{gF5}dS2[aQ1]pZ7_fX9',
     resave: false,
     saveUninitialized: false
 }));
 
-// Inizializzazione Passport 
+// passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
 
 
-// 4. API DELLE ROTTE DI AUTENTICAZIONE (Login, Logout, Sessione Corrente)
-// Regole di validazione sintattica per le credenziali di login
+// sintactin validation for login
 const validaLogin = [
     body('username')
-        .notEmpty().withMessage("L'username è obbligatorio.")
+        .notEmpty().withMessage("Missing username.")
         .trim(),
     body('password')
-        .notEmpty().withMessage("La password è obbligatoria.")
-        .isLength({ min: 5 }).withMessage("La password deve essere lunga almeno 5 caratteri.")
+        .notEmpty().withMessage("Missgin password.")
+        .isLength({ min: 5 }).withMessage("password must be longer than 5 .")
 ];
-// POST /api/sessions -> Effettua il login
+// POST /api/sessions --login
 app.post('/api/sessions', validaLogin, function(req, res, next) {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Se i campi sono vuoti o la password è corta, risponde subito con 422
-        return res.status(422).json({ errors: errors.array() }); // Slide 27
+        
+        return res.status(422).json({ errors: errors.array() }); 
     }
 
     passport.authenticate('local', (err, user, info) => {
@@ -68,82 +60,71 @@ app.post('/api/sessions', validaLogin, function(req, res, next) {
         if (!user) {
             return res.status(401).json(info);
         }
-        // Crea la sessione di login
+        // login session
         req.login(user, (err) => {
             if (err) return next(err);
             
-            // Creiamo un oggetto pulito usando direttamente 'user'
+
             const userSafe = { 
                 id: user.id, 
                 username: user.username 
             };
             
-            // Invia il JSON al client in totale sicurezza!
+            
             return res.json(userSafe);
         });
     })(req, res, next);
 });
 
-// GET /api/sessions/current -> Verifica se l'utente ha già una sessione attiva (utile al ricaricamento della pagina)
+// active session for user
 app.get('/api/sessions/current', (req, res) => {
     if (req.isAuthenticated()) {
         const userSafe = { id: req.user.id, username: req.user.username };
         res.status(200).json(userSafe);
     } else {
-        res.status(401).json({ error: 'Nessuna sessione attiva' });
+        res.status(401).json({ error: 'no active session' });
     }
 });
 
-// DELETE /api/sessions/current -> Effettua il logout
+//il logout
 app.delete('/api/sessions/current', (req, res) => {
     req.logout(() => {
-        res.status(200).json({ message: 'Logout effettuato con successo' });
+        res.status(200).json({});
     });
 });
 
-// ==========================================
-// 6. API DI GIOCO REALI (Blocco 4)
-// ==========================================
-
-// --- GET /api/network ---
-// Restituisce l'intera mappa
+//retunr network
 app.get('/api/network', isLoggedIn, async (req, res, next) => {
     try {
         const network = await gameDao.getCompleteNetwork();
         res.json(network);
     } catch (err) {
-        // Logghiamo l'errore sul terminale del server per non perdere l'eccezione nativa
-        console.error("Errore nel recupero della mappa:", err); 
-        // Inviamo una risposta pulita al client
-        res.status(500).json({ error: 'Errore interno nel recupero della mappa ferroviaria.' });
+        console.error("Error retrieving the map:", err); 
+        res.status(500).json({ error: 'Internal error while retrieving the railway map.' });
     }
 });
-// --- GET /api/ranking ---
-// Classifica protetta 
+
+// ranking (protected)
 app.get('/api/ranking', isLoggedIn, async (req, res, next) => {
     try {
         const ranking = await gameDao.getRanking();
         res.json(ranking);
     } catch (err) {
-        // Applichiamo il medesimo principio: logghiamo l'eccezione sul server per il debug
-        console.error("Errore nel recupero della classifica:", err);
-        // Inviamo una risposta di errore pulita al client
-        res.status(500).json({ error: 'Errore interno nel recupero della classifica globale.' });
+        console.error("Error retreving the ranking:", err);
+        res.status(500).json({ error: 'Internal error while retrieving the ranking.' });
     }
 });
 
-// --- FUNZIONE AUSILIARIA: Algoritmo BFS per calcolare la distanza minima ---
+// BFS algorithm
 function calcolaDistanzaMinima(partenzaId, destinazioneId, connections) {
-    // Creiamo una lista di adiacenza (il grafo delle stazioni)
     const grafo = {};
     connections.forEach(c => {
         if (!grafo[c.station_a_id]) grafo[c.station_a_id] = [];
         if (!grafo[c.station_b_id]) grafo[c.station_b_id] = [];
         grafo[c.station_a_id].push(c.station_b_id);
-        grafo[c.station_b_id].push(c.station_a_id); // Tratta bidirezionale
+        grafo[c.station_b_id].push(c.station_a_id); 
     });
 
-    // Algoritmo BFS per trovare il percorso più breve
     const coda = [ { nodo: partenzaId, distanza: 0 } ];
     const visitati = new Set([partenzaId]);
 
@@ -160,12 +141,11 @@ function calcolaDistanzaMinima(partenzaId, destinazioneId, connections) {
             }
         }
     }
-    return -1; // Non raggiungibile
+    return -1; 
 }
 
-// --- POST /api/games/start ---
-// Avvia una nuova partita calcolando la tratta valida (Riscritto secondo la teoria del Blocco_02)
-app.post('/api/games/start', isLoggedIn, async (req, res, next) => { // Aggiunto 'next' qui
+// new game
+app.post('/api/games/start', isLoggedIn, async (req, res, next) => { 
     try {
         const network = await gameDao.getCompleteNetwork();
         const stazioni = network.stations;
@@ -175,7 +155,6 @@ app.post('/api/games/start', isLoggedIn, async (req, res, next) => { // Aggiunto
         let distanza = 0;
         let tentativi = 0;
 
-        // Ciclo di controllo: estrae finché non trova una tratta lunga almeno 3 segmenti
         while (distanza < 3 && tentativi < 100) {
             partenza = stazioni[Math.floor(Math.random() * stazioni.length)];
             destinazione = stazioni[Math.floor(Math.random() * stazioni.length)];
@@ -187,18 +166,16 @@ app.post('/api/games/start', isLoggedIn, async (req, res, next) => { // Aggiunto
         }
 
         if (distanza < 3) {
-            return res.status(500).json({ error: "Impossibile generare una tratta valida sulla mappa." });
+            return res.status(500).json({ error: "Impossibible create a valid route." });
         }
 
-        // Salva temporaneamente i dati della partita attiva nella sessione dell'utente (Reading_1)
         req.session.partitaAttiva = {
             partenza: partenza,
             destinazione: destinazione,
-            score: 20, // Punteggio 
+            score: 20, 
             dataInizio: new Date()
         };
 
-        // Risponde al client come richiesto
         res.json({
             partenza: partenza,
             destinazione: destinazione,
@@ -206,32 +183,28 @@ app.post('/api/games/start', isLoggedIn, async (req, res, next) => { // Aggiunto
         });
 
     } catch (err) {
-        // Applichiamo la teoria: tracciamo l'errore effettivo sul server e lo passiamo a Express
-        console.error("Errore critico durante l'avvio della partita:", err);
-        res.status(500).json({ error: "Errore interno del server durante lo start del gioco." });
+        console.error("Critical error while starting the game:", err);
+        res.status(500).json({ error: "Internal server error while starting the game." });
     }
 });
 
-// --- POST /api/games/validate ---
-//definisco le regole 
+// validate 
 const validaStrutturaPercorso=[
     body('percorso')
-        .exists().withMessage("Il campo percorso è obbligatorio.")
-        .isArray().withMessage("Il percorso deve essere un array non vuoto.")
+        .exists().withMessage("The route field is required.")
+        .isArray().withMessage("The route must be a non-empty array.")
 ];
-// Riceve il percorso del giocatore, lo valida, calcola i punti con gli imprevisti e salva nel DB
+
 
 app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req, res, next) => {
-    //controllo errori express-validator 
+    //express-validator
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Se ci sono errori strutturali (manca il body o non è un array), fallisce subito
         return res.status(422).json({ errors: errors.array() });
     }
 
-    // 1. GESTIONE DELLO STATO (Reading_1): Verifica presenza sessione di gioco attiva
     if (!req.session.partitaAttiva) {
-        return res.status(400).json({ error: "Nessuna partita attiva trovata per questa sessione." });
+        return res.status(400).json({ error: "No active game found for this session." });
     }
 
     const { partenza, destinazione } = req.session.partitaAttiva;
@@ -239,43 +212,43 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
     const userId = req.user.id;
     const oggi = new Date().toISOString().split('T')[0];
 
-    // Funzione ausiliaria per gestire i fallimenti semantici salvando a 0 monete sul DB (Richiesto dalle specifiche)
+    //0 score per partite invalide
     const fallisciPartita = async (motivo) => {
         try {
             await gameDao.createGame(userId, 0, oggi);
-            // Pulizia dello stato della sessione per transizione di fase
+        
             delete req.session.partitaAttiva;
             return res.status(200).json({ esito: "invalido", motivo: motivo, punteggio: 0, eventi: [] });
         } catch (err) {
-            console.error("Errore critico durante il salvataggio della partita fallita:", err);
-            return res.status(500).json({ error: "Errore interno durante il salvataggio dello stato di fallimento." });
+            console.error("Critical error while saving the failed game:", err);
+            return res.status(500).json({ error: "Internal error while saving the failure state." });
         }
     };
 
-    //GESTIONE ARRAY VUOTO / TEMPO SCADUTO ---
+    //end time
     if (percorsoScelto.length === 0) {
-        return await fallisciPartita("Nessuna traccia selezionata, partita invalida.");
+        return await fallisciPartita("No track selected, invalid game.");
     }
 
-    // B. Validazione dei tipi di dato degli elementi interni per evitare eccezioni a runtime (Qualità del codice)
+    
     for (const seg of percorsoScelto) {
         if (!seg || typeof seg !== 'object' || typeof seg.id !== 'number') {
-            return res.status(422).json({ error: "Formato dei segmenti non valido o tipi di dato errati." });
+            return res.status(422).json({});
         }
     }
 
     try {
-        //controllo sul tempo 
+        //time check 
         const oraAttuale = new Date();
         const dataInizio = new Date(req.session.partitaAttiva.dataInizio);
         const secondiTrascorsi = (oraAttuale - dataInizio) / 1000;
 
         
-        if (secondiTrascorsi > 90) {
-            return await fallisciPartita("Tempo massimo di 90 secondi esaurito."); 
+        if (secondiTrascorsi > 95) {
+            return await fallisciPartita("Time's up"); 
         }
 
-        // Recuperiamo la topologia della rete dal DB per effettuare i controlli di integrità semantica
+        
         const network = await gameDao.getCompleteNetwork();
         const connessioniMappa = network.connections;
         const stazioniMappa = network.stations;
@@ -284,53 +257,51 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
         for (const segClient of percorsoScelto) {
             const segmentoDalDB = connessioniMappa.find(c => c.id === segClient.id);
             if (!segmentoDalDB) {
-                return await fallisciPartita(`Il segmento con ID ${segClient.id} non esiste nella rete ufficiale.`);
+                return await fallisciPartita(`The segment with ID ${segClient.id} does not exist in the official network.`);
             }
             percorsoReale.push(segmentoDalDB);
         }
 
-        // --- CONTROLLO 1: Corrispondenza dei nodi di Partenza e Arrivo ---
+        // check start and finish
         const primoSegmento = percorsoReale[0];
         if (primoSegmento.station_a_id !== partenza.id && primoSegmento.station_b_id !== partenza.id) {
-            return await fallisciPartita("Il percorso non inizia dalla stazione di partenza assegnata.");
+            return await fallisciPartita("The route does not start from the assigned starting station.");
         }
 
         const ultimoSegmento = percorsoReale[percorsoReale.length - 1];
         if (ultimoSegmento.station_a_id !== destinazione.id && ultimoSegmento.station_b_id !== destinazione.id) {
-            return await fallisciPartita("Il percorso non termina nella stazione di destinazione assegnata.");
+            return await fallisciPartita("The route does not end at the assigned destination station.");
         }
 
-        // --- CONTROLLO 2: Continuità del grafo e unicità dei segmenti ---
+        // graph continuity, Segment uniqueness
         const segmentiVisti = new Set();
         let stazioneCorrenteId = partenza.id;
 
         for (let i = 0; i < percorsoReale.length; i++) {
             const segReale = percorsoReale[i];
 
-            // Vincolo: ciascun segmento può essere selezionato una sola volta (No duplicati)
+            
             if (segmentiVisti.has(segReale.id)) {
-                return await fallisciPartita("Il percorso contiene segmenti duplicati.");
+                return await fallisciPartita("The route contains duplicate segments.");
             }
             segmentiVisti.add(segReale.id);
 
-            // Verifica della proprietà di adiacenza dei nodi (Continuità della linea)
+            
             if (segReale.station_a_id === stazioneCorrenteId) {
                 stazioneCorrenteId = segReale.station_b_id; 
             } else if (segReale.station_b_id === stazioneCorrenteId) {
                 stazioneCorrenteId = segReale.station_a_id; 
             } else {
-                return await fallisciPartita("Il percorso è interrotto (manca continuità tra segmenti consecutivi).");
+                return await fallisciPartita("The route is broken.");
             }
 
-            // --- CONTROLLO 3: Restrizioni sui cambi di linea (Solo nelle stazioni di interscambio) ---
+            // check scamnio lineee
             if (i > 0) {
                 
                 const segPrecedente = percorsoReale[i - 1];
                 
                 if (segReale.line_id !== segPrecedente.line_id) {
                     
-                    // PRIMA ERA COSÌ: const stazioneContattoId = (segPrecedente.station_a_id === seg.station_a_id ...
-                    // ORA È COSÌ (Usa i nodi sicuri per trovare l'intersezione):
                     let stazioneContattoId;
                     if (segPrecedente.station_a_id === segReale.station_a_id || segPrecedente.station_a_id === segReale.station_b_id) {
                         stazioneContattoId = segPrecedente.station_a_id;
@@ -345,18 +316,18 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
 
                     if (lineeUniche.size < 2) {
                         const stazioneContatto = stazioniMappa.find(s => s.id === stazioneContattoId);
-                        return await fallisciPartita(`Cambio di linea illegale: la stazione ${stazioneContatto ? stazioneContatto.name : 'Sconosciuta'} non è un nodo di interscambio.`);
+                        return await fallisciPartita(`Illegal line change: the station ${stazioneContatto ? stazioneContatto.name : 'Unknown'} is not an interchange node.`);
                     }
                 }
             }
         }
 
-        // --- ELABORAZIONE LOGICA DEL PUNTEGGIO FINALE (BUSINESS LOGIC) ---
+        // score
         let monete = 20; 
         const elencoEventiEstratti = [];
         const tuttiGliEventi = await gameDao.getEvents();
 
-        // Generazione stocastica degli imprevisti/bonus per ogni tratta percorsa
+        // events
         for (let i = 0; i < percorsoReale.length; i++) {
             const eventoCasuale = tuttiGliEventi[Math.floor(Math.random() * tuttiGliEventi.length)];
             monete += eventoCasuale.effect;
@@ -368,15 +339,12 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
             });
         }
 
-        // Vincolo: se il computo delle monete è negativo, il risultato memorizzato viene normalizzato a zero
         if (monete < 0) {
             monete = 0;
         }
 
-        // Persistenza dello stato finale sul Database relazionale
         await gameDao.createGame(userId, monete, oggi);
 
-        // Rimozione dello stato transitorio dalla sessione per prevenire replay-attack sulla validazione
         delete req.session.partitaAttiva;
 
         return res.status(200).json({
@@ -386,13 +354,12 @@ app.post('/api/games/validate', isLoggedIn, validaStrutturaPercorso, async (req,
         });
 
     } catch (err) {
-        // EXPRESS ASYNC ERROR HANDLING (Blocco_02): Trasmissione dell'eccezione al middleware di log centralizzato
-        console.error("Eccezione intercettata durante la validazione:", err);
+        console.error("Exception caught during validation:", err);
         return next(err);
     }
 });
 
-// 5. AVVIO DEL SERVER
+// server
 app.listen(port, () => {
-    console.log(`Server Express avviato su http://localhost:${port}`);
+    console.log(`Express server started on http://localhost:${port}`);
 });

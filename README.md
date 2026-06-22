@@ -9,112 +9,161 @@
 After the submission or when times runs out, if the sumbimission is validate there is shown the route with the events and after the moneys obtained by the user and a button to play again. Otherwise is shown a message of invalidate game with the score 0 and a button to play again. 
 - Route `/ranking`: This page is responsable of showing the ranking with the top score for each user. 
 
+
 ## API Server
+
 * **POST `/api/sessions`**: Login a user to establish a new session.
   - **Request body**: JSON object with the user's credentials.
   ```json
     {
-      "username": "mario.rossi",
-      "password": "mysecurepassword"
+      "username": "principessa_nina",
+      "password": "password"
     }
-  ```
-  - **Response body**: JSON object with the safe user details or an array of validation errors.
-  ```json
-    {
-      "id": 1,
-      "username": "mario.rossi"
-    }
-  ```
-  - **Codes**: `200 OK`, `401 Unauthorized`, `422 Unprocessable Entity`.
 
-* **GET `/api/sessions/current`**: Check if the current user has an active session (useful for page reloads).
-  - **Request body**: *None*
-  - **Response body**: JSON object with the logged-in user details.
-  ```json
-    {
-      "id": 1,
-      "username": "mario.rossi"
-    }
-  ```
-  - **Codes**: `200 OK`, `401 Unauthorized`.
 
-* **DELETE `/api/sessions/current`**: Logout the current user and destroy the active session.
-  - **Request body**: *None*
-  - **Response body**: JSON object with a success message.
-  ```json
-    {
-      "message": "Logout effettuato con successo"
-    }
-  ```
-  - **Codes**: `200 OK`.
 
-* **GET `/api/network`**: Retrieve the complete railway network map (stations and connections). Requires the user to be logged in.
-  - **Request body**: *None*
-  - **Response body**: JSON object containing arrays of stations and their connections.
-  ```json
-    {
-      "stations": [
-        { "id": 1, "name": "Roma Termini" },
-        { "id": 2, "name": "Milano Centrale" }
-      ],
-      "connections": [
-        { "id": 101, "station_a_id": 1, "station_b_id": 2, "line_id": 1 }
-      ]
-    }
-  ```
-  - **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+**Response body**: JSON object with the safe user details or an array of validation errors.
 
-* **GET `/api/ranking`**: Retrieve the global player ranking. Requires the user to be logged in.
-  - **Request body**: *None*
-  - **Response body**: JSON array containing the ranked list of players and their scores.
-  ```json
-    [
-      { "username": "luigi.verdi", "score": 350 },
-      { "username": "mario.rossi", "score": 280 }
+```json
+  {
+    "id": 1,
+    "username": "principessa_nina"
+  }
+
+```
+
+* **Codes**: `200 OK`, `401 Unauthorized`, `422 Unprocessable Entity`.
+
+* **GET `/api/sessions/current**`: Check if the current user has an active session (useful for page reloads).
+* **Request body**: *None*
+* **Response body**: JSON object with the logged-in user details.
+
+
+```json
+  {
+    "id": 1,
+    "username": "principessa_nina"
+  }
+
+```
+
+
+* **Codes**: `200 OK`, `401 Unauthorized`.
+
+
+* **DELETE `/api/sessions/current**`: Logout the current user and destroy the active session.
+* **Request body**: *None*
+* **Response body**: Empty JSON object.
+
+
+```json
+  {}
+
+```
+
+
+* **Codes**: `200 OK`.
+
+
+* **GET `/api/network**`: Retrieve the complete railway network map (stations, lines, and connections). Requires the user to be logged in.
+* **Request body**: *None*
+* **Response body**: JSON object containing arrays of stations, lines, and their connections.
+
+
+```json
+  {
+    "stations": [
+      { "id": 1, "name": "Mario House" },
+      { "id": 2, "name": "Mushroom Kingdom" }
+    ],
+    "lines": [
+      { "id": 1, "name": "Toad Line", "color": "Red" }
+    ],
+    "connections": [
+      { "id": 1, "station_a_id": 1, "station_b_id": 2, "line_id": 1 }
     ]
-  ```
-  - **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+  }
 
-* **POST `/api/games/start`**: Start a new game instance. Automatically generates a valid start and destination station at least 3 segments apart and saves the active game state in the user's session. Requires the user to be logged in.
-  - **Request body**: *None*
-  - **Response body**: JSON object containing the assigned departure, destination, and the map connections.
-  ```json
-    {
-      "partenza": { "id": 1, "name": "Roma Termini" },
-      "destinazione": { "id": 5, "name": "Napoli Centrale" },
-      "connections": [
-        { "id": 101, "station_a_id": 1, "station_b_id": 2, "line_id": 1 }
-      ]
-    }
-  ```
-  - **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+```
 
-* **POST `/api/games/validate`**: Validate the path chosen by the player, calculate the final score (applying random events/modifiers), and save the result to the database. Requires an active game session and the user to be logged in.
-  - **Request body**: JSON object containing the chosen path as an array of connection segment objects.
-  ```json
-    {
-      "percorso": [
-        { "id": 101 },
-        { "id": 102 },
-        { "id": 105 }
-      ]
-    }
-  ```
-  - **Response body**: JSON object detailing whether the path was valid, the final score (monete), and any random events that were extracted along the way. If invalid, the game is failed and score is 0.
-  ```json
-    {
-      "esito": "valido",
-      "punteggio": 25,
-      "eventi": [
-        {
-          "segmento_index": 0,
-          "description": "Treno in perfetto orario!",
-          "modifier": 5
-        }
-      ]
-    }
-  ```
-  - **Codes**: `200 OK`, `400 Bad Request`, `401 Unauthorized`, `422 Unprocessable Entity`, `500 Internal Server Error`.
+
+* **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+
+
+* **GET `/api/ranking**`: Retrieve the global player ranking. Requires the user to be logged in.
+* **Request body**: *None*
+* **Response body**: JSON array containing the ranked list of players and their top scores.
+
+
+```json
+  [
+    { "username": "wapol", "top_score": 32 },
+    { "username": "principessa_nina", "top_score": 10 }
+  ]
+
+```
+
+
+* **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+
+
+* **POST `/api/games/start**`: Start a new game instance. Automatically generates a valid start and destination station at least 3 segments apart and saves the active game state in the user's session. Requires the user to be logged in.
+* **Request body**: *None*
+* **Response body**: JSON object containing the assigned departure, destination, and the map connections.
+
+
+```json
+  {
+    "partenza": { "id": 1, "name": "Mario House" },
+    "destinazione": { "id": 5, "name": "Boo Woods" },
+    "connections": [
+      { "id": 1, "station_a_id": 1, "station_b_id": 2, "line_id": 1 }
+    ]
+  }
+
+```
+
+
+* **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
+
+
+* **POST `/api/games/validate**`: Validate the path chosen by the player, calculate the final score (applying random events/modifiers), and save the result to the database. Requires an active game session and the user to be logged in.
+* **Request body**: JSON object containing the chosen path as an array of connection segment objects.
+
+
+```json
+  {
+    "percorso": [
+      { "id": 1 },
+      { "id": 2 },
+      { "id": 3 }
+    ]
+  }
+
+```
+
+
+* **Response body**: JSON object detailing whether the path was valid, the final score (coins), and any random events that were extracted along the way. If invalid, the game is failed and score is 0.
+
+
+```json
+  {
+    "esito": "valido",
+    "punteggio": 25,
+    "eventi": [
+      {
+        "segmento_index": 0,
+        "description": "Mushroom Boost! Speed up",
+        "modifier": 1
+      }
+    ]
+  }
+
+```
+
+
+* **Codes**: `200 OK`, `400 Bad Request`, `401 Unauthorized`, `422 Unprocessable Entity`, `500 Internal Server Error`.
+
 
 ## Database Tables
 
@@ -138,7 +187,8 @@ the stations and lines tables
 
 ## Screenshot
 
-![gampage](./img/gamepage.jpg)
+![gamepage](./img/gamepage.jpg)
+![rankingpage](./img/rankingpage.jpg)
 
 
 ## Users Credentials
