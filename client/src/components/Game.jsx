@@ -64,15 +64,15 @@ export default function Game() {
         if (gameState === 'EXECUTION') {
             if (executionStep < events.length) {
                 const timer = setTimeout(() => {
-                  
-                    setExecutionStep(prev => {
-                        const nextStep = prev + 1; 
-                       
-                        if (nextStep < events.length && events[nextStep]) {
-                            setCurrentCoins(curr => curr + events[nextStep].modifier);
-                        }
-                        return nextStep;
-                    }); 
+                    
+                    const nextStep = executionStep + 1; 
+                    
+                    if (nextStep < events.length && events[nextStep]) {
+                        setCurrentCoins(curr => Math.max(0, curr + events[nextStep].modifier));
+                    }
+                   
+                    setExecutionStep(nextStep);
+                    
                 }, 2500); 
                 return () => clearTimeout(timer);
             } else {
@@ -138,8 +138,8 @@ export default function Game() {
                     setGameState('RESULT');
                 } else {
                     // valid route
-                    setExecutionStep(0); 
-                    setCurrentCoins(20 + (data.eventi[0]?.modifier || 0)); 
+                    setExecutionStep(-1); 
+                    setCurrentCoins(20); 
                     setGameState('EXECUTION');
                 }
             } else {
